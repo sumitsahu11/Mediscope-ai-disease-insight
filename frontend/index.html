@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disease Info Finder</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f7fa;
+    color: #1a202c;
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav-brand {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0ea5e9;
+    letter-spacing: -0.3px;
+  }
+  .nav-brand span { color: #1a202c; }
+  .nav-sub { font-size: 11px; color: #94a3b8; font-weight: 400; margin-left: 6px; }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    padding: 56px 32px 48px;
+    text-align: center;
+    color: #fff;
+  }
+  .hero h1 { font-size: 32px; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.5px; }
+  .hero p { font-size: 15px; opacity: 0.85; margin-bottom: 32px; }
+
+  /* SEARCH BOX */
+  .search-wrap {
+    max-width: 560px;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+  }
+  .search-wrap input {
+    flex: 1;
+    padding: 14px 18px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    color: #1a202c;
+    outline: none;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  }
+  .search-wrap input:focus { box-shadow: 0 2px 12px rgba(0,0,0,0.12), 0 0 0 3px rgba(255,255,255,0.4); }
+  .search-wrap button {
+    padding: 14px 26px;
+    background: #1e293b;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+  .search-wrap button:hover { background: #0f172a; }
+  .search-wrap button:disabled { background: #64748b; cursor: not-allowed; }
+
+  /* QUICK PILLS */
+  .quick-pills {
+    max-width: 560px;
+    margin: 14px auto 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    justify-content: center;
+  }
+  .pill {
+    padding: 5px 13px;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    font-size: 12px;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .pill:hover { background: rgba(255,255,255,0.35); }
+
+  /* MAIN CONTENT */
+  main { max-width: 720px; margin: 0 auto; padding: 40px 24px 60px; }
+
+  /* PLACEHOLDER */
+  .placeholder {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+  }
+  .placeholder-icon { font-size: 48px; margin-bottom: 16px; }
+  .placeholder h3 { font-size: 16px; font-weight: 600; color: #64748b; margin-bottom: 8px; }
+  .placeholder p { font-size: 13px; line-height: 1.7; }
+
+  /* LOADING */
+  .loading-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #64748b;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #0ea5e9;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESULT CARD */
+  .result-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .result-card-header {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    padding: 22px 26px;
+    color: #fff;
+  }
+  .result-disease-name {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+    text-transform: capitalize;
+  }
+  .result-source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.2);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .result-body { padding: 26px; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #0ea5e9;
+    margin-bottom: 10px;
+  }
+
+  .summary-text {
+    font-size: 14px;
+    line-height: 1.85;
+    color: #374151;
+    margin-bottom: 24px;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .meta-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #f0f9ff;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+  }
+  .meta-chip.red { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+  .meta-chip.green { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+  .meta-chip.amber { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+
+  .source-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #64748b;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-top: 4px;
+  }
+  .source-link:hover { background: #f1f5f9; }
+  .source-link strong { color: #0ea5e9; }
+  .source-link .arrow { margin-left: auto; color: #94a3b8; }
+
+  .attribution {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+
+  /* ERROR */
+  .error-card {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+  }
+  .error-card .icon { font-size: 32px; margin-bottom: 12px; }
+  .error-card h3 { font-size: 15px; font-weight: 600; color: #be123c; margin-bottom: 6px; }
+  .error-card p { font-size: 13px; color: #9f1239; line-height: 1.6; }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    font-size: 12px;
+    color: #92400e;
+    line-height: 1.7;
+  }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 24px; }
+    .search-wrap { flex-direction: column; }
+    .search-wrap button { width: 100%; }
+    nav { padding: 0 16px; }
+    main { padding: 24px 16px 48px; }
+    .result-body { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">Disease<span>Info</span> <span class="nav-sub">Powered by NHS</span></div>
+</nav>
+
+<div class="hero">
+  <h1>Find Disease Information</h1>
+  <p>Search any disease or condition for a clear, plain-language summary.</p>
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="e.g. diabetes, malaria, asthma..." autocomplete="off" />
+    <button id="searchBtn" onclick="runSearch()">Search</button>
+  </div>
+  <div class="quick-pills">
+    <span class="pill" onclick="quickSearch('diabetes')">Diabetes</span>
+    <span class="pill" onclick="quickSearch('asthma')">Asthma</span>
+    <span class="pill" onclick="quickSearch('malaria')">Malaria</span>
+    <span class="pill" onclick="quickSearch('flu')">Flu</span>
+    <span class="pill" onclick="quickSearch('migraine')">Migraine</span>
+    <span class="pill" onclick="quickSearch('hypertension')">Hypertension</span>
+    <span class="pill" onclick="quickSearch('tuberculosis')">Tuberculosis</span>
+    <span class="pill" onclick="quickSearch('anxiety')">Anxiety</span>
+  </div>
+</div>
+
+<main>
+  <div id="output">
+    <div class="placeholder">
+      <div class="placeholder-icon">🔍</div>
+      <h3>Search for a disease or condition</h3>
+      <p>Type a disease name above or click one of the quick-search buttons.<br>Results are sourced directly from the NHS website.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+  document.getElementById('searchInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') runSearch();
+  });
+
+  function quickSearch(name) {
+    document.getElementById('searchInput').value = name;
+    runSearch();
+  }
+
+  async function runSearch() {
+    const query = document.getElementById('searchInput').value.trim();
+    if (!query) {
+      document.getElementById('searchInput').focus();
+      return;
+    }
+
+    const btn = document.getElementById('searchBtn');
+    const out = document.getElementById('output');
+
+    btn.disabled = true;
+    btn.textContent = 'Searching...';
+    out.innerHTML = `
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Looking up <strong>${escapeHtml(query)}</strong> on the NHS website...</p>
+      </div>`;
+
+    try {
+      const res = await fetch('/api/disease-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        out.innerHTML = `
+          <div class="error-card">
+            <div class="icon">⚠️</div>
+            <h3>No results found</h3>
+            <p>${escapeHtml(data.error || 'Could not find information for this disease. Try a different spelling or search term.')}</p>
+          </div>`;
+      } else {
+        out.innerHTML = renderResult(data);
+        // Animate confidence bar
+        setTimeout(() => {
+          document.querySelectorAll('.conf-fill').forEach(el => {
+            el.style.width = el.dataset.width;
+          });
+        }, 100);
+      }
+    } catch (err) {
+      out.innerHTML = `
+        <div class="error-card">
+          <div class="icon">🔌</div>
+          <h3>Connection error</h3>
+          <p>Could not reach the backend server. Make sure the Flask app is running on port 5000.</p>
+        </div>`;
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Search';
+  }
+
+  function renderResult(data) {
+    const sentences = data.summary ? data.summary.split(/(?<=[.!?])\s+/) : [];
+    const summaryHtml = data.summary
+      ? `<div class="summary-text">${escapeHtml(data.summary)}</div>`
+      : `<div class="summary-text" style="color:#94a3b8;">No summary available for this condition.</div>`;
+
+    return `
+      <div class="result-card">
+        <div class="result-card-header">
+          <div class="result-disease-name">${escapeHtml(data.query)}</div>
+          <span class="result-source-badge">🏥 ${escapeHtml(data.source_name || 'NHS')}</span>
+        </div>
+        <div class="result-body">
+          <div class="section-label">Summary</div>
+          ${summaryHtml}
+
+          <div class="section-label">Source</div>
+          <a href="${escapeHtml(data.source_url)}" target="_blank" rel="noopener" class="source-link">
+            <strong>NHS.uk</strong> — ${escapeHtml(data.source_url)}
+            <span class="arrow">↗</span>
+          </a>
+          <p class="attribution">${escapeHtml(data.attribution || '')}</p>
+        </div>
+      </div>
+      <div class="disclaimer">
+        ⚠️ This information is for educational purposes only and is adapted from the NHS website.
+        It is not a substitute for professional medical advice. Always consult a qualified doctor.
+      </div>`;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+</script>
+</body>
+</html>
